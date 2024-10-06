@@ -41,7 +41,7 @@ namespace TarodevController
                     // When the snake detects the player has reached its position, it invokes Pull with false. Player regains their movement and gravity, then player invokes grappling with false.
                 // If the grapple needs to be canceled (damage or manual), invoke Pull with false. Player regains their movement and gravity, then player invokes grappling with false.
             // When invoked with true and true, subscribers disable their movement / gravity during a serpentine grapple. If false and true, subscribers re-enable their movement / gravity.
-        public event Action<string, int, int> GrappleChanged; //bool = start/stop, string = grapple type, int = _playerFacing, int = _playerLooking
+        public event Action<Grapple, int, int> GrappleChanged; //bool = start/stop, string = grapple type, int = _playerFacing, int = _playerLooking
   
         #endregion
 
@@ -54,7 +54,7 @@ namespace TarodevController
             _rend = GetComponentInChildren<SpriteRenderer>();
 
             _clingStamina = _stats.MaxClingStamina;
-            _grappleInUse = "none";
+            _grappleInUse = Grapple.None;
 
             var _eventPublisher = _snake.GetComponent<SnakeController>();
             _eventPublisher.PullingChanged += OnPullingChanged;
@@ -101,9 +101,9 @@ namespace TarodevController
             // Save which directions the player is facing and looking for other classes to use
             // E.g. which direction the grapple should go and where it should start
             if (_frameInput.Move.x != 0) _playerFacing = (int)_frameInput.Move.x; // 1 = right, -1 = left
-            if (_grappleInUse == "none") _playerLooking = (int)_frameInput.Move.y; // 1 = up, 0 = neither, -1 = down
+            if (_grappleInUse == Grapple.None) _playerLooking = (int)_frameInput.Move.y; // 1 = up, 0 = neither, -1 = down
 
-            if (_frameInput.Grapple) _grappleInUse = "slither";
+            if (_frameInput.Grapple) _grappleInUse = Grapple.Slither;
 
             if (_frameInput.JumpDown)
             {
@@ -121,7 +121,7 @@ namespace TarodevController
 
             HandleGrapple();
 
-            if (!_beingPulled && _grappleInUse != "slither")
+            if (!_beingPulled && _grappleInUse != Grapple.Slither)
             {
                 HandleJump();
                 if (!(_onRing && _frameVelocity.y == 0 && _playerLooking != -1))
@@ -194,7 +194,7 @@ namespace TarodevController
                 GroundedChanged?.Invoke(false, 0);
             }
             
-            if (_grappleInUse != "none")
+            if (_grappleInUse != Grapple.None)
             {
                 // Enough room to use the grapple?
                 bool grappleCramped = ((_playerLooking == 0 && ((_playerFacing == 1 && grappleRightHit && !((_sliding || _clinging) && _previousWallDirection == 1)) || (_playerFacing == -1 && grappleLeftHit && !((_sliding || _clinging) && _previousWallDirection == -1))))
@@ -206,7 +206,7 @@ namespace TarodevController
                 
                 if ((_beingPulled && reachedGrappledSurface) || (!_beingPulled && grappleCramped) || _onRing)
                 {
-                    GrappleChanged?.Invoke("none", _playerFacing, _playerLooking);
+                    GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
                     if (ceilingHit && _clingButtonDown && _clingStamina > 0)
                     {
                         _clinging = true;
@@ -268,7 +268,7 @@ namespace TarodevController
             {
                 if (!_onRing)
                 {
-                    if (_grappleInUse != "none") GrappleChanged?.Invoke("none", _playerFacing, _playerLooking);
+                    if (_grappleInUse != Grapple.None) GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
                     _onRing = true;
                     transform.position = new Vector2(collision.transform.position.x, collision.transform.position.y - _rend.bounds.size.y);
                     _frameVelocity = Vector2.zero;
@@ -406,27 +406,27 @@ namespace TarodevController
 
         [SerializeField] private bool _grappleUsable;
         // Consider consolidating the below variables into an enum state variable, bc you'll need one for clinging too and for serpentine grappling freeze too
-        [SerializeField] private string _grappleInUse;
+        [SerializeField] private Grapple _grappleInUse;
         [SerializeField] private bool _beingPulled;
         [SerializeField] private bool _refreshToBeConsumed;
         [SerializeField] private List<Vector2> pivotPoints;
 
         private void HandleGrapple()
         {
-            if (_grappleInUse != "none" && _grappleUsable)
+            if (_grappleInUse != Grapple.None && _grappleUsable)
             {
                 //Check if it's a serpentine grapple
                 //Set a bool to freeze player in the air
                 _grappleUsable = false;
                 var playerFacing = _sliding || _clinging ? -_previousWallDirection : _playerFacing; // If you're on a wall, grapple away from the wall
-                if (_grappleInUse == "slither") _frameVelocity = Vector2.zero;
+                if (_grappleInUse == Grapple.Slither) _frameVelocity = Vector2.zero;
                 _snake.SetActive(true);
                 GrappleChanged?.Invoke(_grappleInUse, playerFacing, _playerLooking);
             }
 
             if (_beingPulled)
             {
-                if (_grappleInUse == "quick")
+                if (_grappleInUse == Grapple.Quick)
                 {
                     if (_playerLooking == 0)
                     {
@@ -438,12 +438,12 @@ namespace TarodevController
                         else 
                         {
                             transform.position = new Vector2 (_snake.transform.position.x, transform.position.y); // Snap the player to the wall
-                            GrappleChanged?.Invoke("none", _playerFacing, _playerLooking);
+                            GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
                         }
                     }
                     else
                     {
-                        if (_playerLooking == -1 && _grounded) GrappleChanged?.Invoke("none", _playerFacing, _playerLooking);
+                        if (_playerLooking == -1 && _grounded) GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
                         else
                         {
                             if (Math.Abs(transform.position.y - _snake.transform.position.y) > 0.5) // Move the player toward the ceiling / floor
@@ -454,7 +454,7 @@ namespace TarodevController
                             else 
                             {
                                 transform.position = _snake.transform.position; // Snap the player to the ceiling / floor
-                                GrappleChanged?.Invoke("none", _playerFacing, _playerLooking);                            
+                                GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);                            
                             }
                         }
                     } 
@@ -495,7 +495,7 @@ namespace TarodevController
                 }
                 if (_beingPulled) yield return null;
             }
-            if (_beingPulled) GrappleChanged?.Invoke("none", _playerFacing, _playerLooking);
+            if (_beingPulled) GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
         }
 
         #endregion
@@ -516,14 +516,14 @@ namespace TarodevController
             _beingPulled = pulling;
             if (!_beingPulled) // pulling just finished
             {
-                _grappleInUse = "none";
+                _grappleInUse = Grapple.None;
                 _snake.SetActive(false);
                 // If cling in queue, move to cling behavior
             }
             else // pulling just started
             {
                 _frameVelocity = Vector2.zero;
-                if (_grappleInUse == "slither")
+                if (_grappleInUse == Grapple.Slither)
                 {
                     pivotPoints = snakePivotPoints;
                     StartCoroutine(SlitherPull());
@@ -541,6 +541,11 @@ namespace TarodevController
 #endif
     }
 
+    public enum Grapple
+    {
+        None, Quick, Slither
+    }
+    
     public struct FrameInput
     {
         public bool JumpDown;
@@ -554,7 +559,7 @@ namespace TarodevController
     {
         public event Action<bool, float> GroundedChanged;
         public event Action Jumped;
-        public event Action<string, int, int> GrappleChanged;
+        public event Action<Grapple, int, int> GrappleChanged;
         public Vector2 FrameInput { get; }
     }
 }

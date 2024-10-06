@@ -15,7 +15,7 @@ namespace TarodevController
         [SerializeField] private float _slitherMaxLength;
 
         private bool _snaking;
-        private string _grappleType;
+        private Grapple _grappleType;
         private int _playerFacing;
         private int _playerLooking;
         private Vector2 _playerPos;
@@ -23,7 +23,7 @@ namespace TarodevController
         private Vector2 _origin;
         private Vector2 _totalOriginOffset;
         private bool _retracting;
-        [SerializeField] private string _slitherDir;
+        [SerializeField] private Direction _slitherDir;
         private float _totalDistanceSlithered; // running total of abs value of displacement, whether horizontal or vertical
         [SerializeField] private List<Vector2> _pivotPoints;
 
@@ -42,7 +42,7 @@ namespace TarodevController
         {
             if (_snaking)
             {
-                if (_grappleType == "quick")
+                if (_grappleType == Grapple.Quick)
                 {
                     SetOrigin();
 
@@ -71,25 +71,25 @@ namespace TarodevController
                         }
                     }
                 }
-                else if (_grappleType == "slither" && !_retracting)
+                else if (_grappleType == Grapple.Slither && !_retracting)
                 {
                     if (Math.Abs(_origin.x - transform.position.x) + Math.Abs(_origin.y - transform.position.y) < _slitherMaxLength)
                     {
-                        if (_slitherDir != "left" && _slitherDir != "right" && Input.GetAxisRaw("Horizontal") != 0)
+                        if (_slitherDir != Direction.Left && _slitherDir != Direction.Right && Input.GetAxisRaw("Horizontal") != 0)
                         {
-                            _slitherDir = Input.GetAxisRaw("Horizontal") > 0 ? "right" : "left";
+                            _slitherDir = Input.GetAxisRaw("Horizontal") > 0 ? Direction.Right : Direction.Left;
                             _pivotPoints.Add(transform.position);
                         }
-                        if (_slitherDir != "up" && _slitherDir != "down" && Input.GetAxisRaw("Vertical") != 0)
+                        if (_slitherDir != Direction.Up && _slitherDir != Direction.Down && Input.GetAxisRaw("Vertical") != 0)
                         {
-                            _slitherDir = Input.GetAxisRaw("Vertical") > 0 ? "up" : "down";
+                            _slitherDir = Input.GetAxisRaw("Vertical") > 0 ? Direction.Up : Direction.Down;
                             _pivotPoints.Add(transform.position);
                         }
 
-                        if (_slitherDir == "right") transform.Translate(Vector2.right * _slitherSpeed * Time.deltaTime);
-                        else if (_slitherDir == "left") transform.Translate(Vector2.left * _slitherSpeed * Time.deltaTime);
-                        else if (_slitherDir == "up") transform.Translate(Vector2.up * _slitherSpeed * Time.deltaTime);
-                        else if (_slitherDir == "down") transform.Translate(Vector2.down * _slitherSpeed * Time.deltaTime);
+                        if (_slitherDir == Direction.Right) transform.Translate(Vector2.right * _slitherSpeed * Time.deltaTime);
+                        else if (_slitherDir == Direction.Left) transform.Translate(Vector2.left * _slitherSpeed * Time.deltaTime);
+                        else if (_slitherDir == Direction.Up) transform.Translate(Vector2.up * _slitherSpeed * Time.deltaTime);
+                        else if (_slitherDir == Direction.Down) transform.Translate(Vector2.down * _slitherSpeed * Time.deltaTime);
                     }
                     else
                     {
@@ -148,12 +148,12 @@ namespace TarodevController
                     var damager = collision.GetComponent<Damager>();
                     _player.GetComponent<PlayerHealth>().TakeDamage(damager.getDamage(), Vector2.zero);
 
-                    if (_grappleType == "slither") StartCoroutine(SlitherRetract());
+                    if (_grappleType == Grapple.Slither) StartCoroutine(SlitherRetract());
                     else _retracting = true;
                 }
                 else
                 {
-                    if (_grappleType == "slither") _pivotPoints.Add(transform.position);
+                    if (_grappleType == Grapple.Slither) _pivotPoints.Add(transform.position);
                     ChangePulling(true); // surface hit
                 }
             }
@@ -196,11 +196,11 @@ namespace TarodevController
 
         #region Event Handlers
 
-        private void OnGrappleChanged(string grappleType, int playerFacing, int playerLooking)
+        private void OnGrappleChanged(Grapple grappleType, int playerFacing, int playerLooking)
         {
             _grappleType = grappleType;
 
-            if (_grappleType == "none")
+            if (_grappleType == Grapple.None)
             {
                 ChangePulling(false); // May or may not have hit surface - end it
             }
@@ -213,10 +213,10 @@ namespace TarodevController
                 SetOrigin();
                 transform.position = _origin; //Might not need this here? But just in case it spawns and instantly collides with something
 
-                if (_grappleType == "slither")
+                if (_grappleType == Grapple.Slither)
                 {
-                    if (_playerLooking == 0) _slitherDir = _playerFacing == 1 ? "right" : "left";
-                    else _slitherDir = _playerLooking == 1 ? "up" : "down";
+                    if (_playerLooking == 0) _slitherDir = _playerFacing == 1 ? Direction.Right : Direction.Left;
+                    else _slitherDir = _playerLooking == 1 ? Direction.Up : Direction.Down;
                     _pivotPoints = new List<Vector2>();
                     _pivotPoints.Add(_origin);
                 }
@@ -226,5 +226,13 @@ namespace TarodevController
         }
 
         #endregion
+    }
+
+    public enum Direction
+    {
+        Right,
+        Left,
+        Up,
+        Down
     }
 }
