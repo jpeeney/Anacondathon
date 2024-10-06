@@ -68,6 +68,9 @@ namespace TarodevController
         [Tooltip("The amount of time in seconds the player can cling to a wall")]
         public float MaxClingStamina = 3f;
 
+        [Tooltip("The amount of time after hitting a ceiling the player can still cling to it. This allows clinging if the player presses the button too late.")]
+        public float CeilingClingGracePeriod = .2f;
+
         [Header("GRAPPLING")] [Tooltip("The grapple movement speed")]
         public float GrappleSpeed = 14f;
         

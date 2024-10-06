@@ -35,5 +35,6 @@ MonoBehaviour:
   LeaveWallBuffer: 0.1
   WallJumpTimer: 0.5
   MaxClingStamina: 2
+  CeilingClingGracePeriod: 0.1
   GrappleSpeed: 25
   GrappleDistance: 1.05

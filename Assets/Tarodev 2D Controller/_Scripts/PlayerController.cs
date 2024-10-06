@@ -68,6 +68,7 @@ namespace TarodevController
             GatherInput();
             
             // Print any debug values you need here
+            //Debug.Log(_frameVelocity + " : " + _rb.velocity);
 
         }
 
@@ -137,6 +138,7 @@ namespace TarodevController
         #region Collisions
         
         private float _frameLeftGrounded = float.MinValue;
+        private float _frameCeilingHit = float.MinValue;
         private bool _grounded;
         private bool _clingButtonDown;
         private bool _clinging;
@@ -168,6 +170,7 @@ namespace TarodevController
             if (ceilingHit) 
             {
                 _frameVelocity.y = Mathf.Min(0, _frameVelocity.y);
+                _frameCeilingHit = _time;
             }
 
             // Landed on the Ground
@@ -231,11 +234,21 @@ namespace TarodevController
                     _bufferedWallJumpUsable = true;
                 }
 
-                if ( _clingButtonDown && _clingStamina > 0 && (((rightHit || leftHit)  && _frameVelocity.y <= 0)
-                || ceilingHit))
+                if (_clingButtonDown && _clingStamina > 0 && (((rightHit || leftHit) && _frameVelocity.y <= 0)
+                || ceilingHit || _time < _frameCeilingHit + _stats.CeilingClingGracePeriod))
                 {
                     _clinging = true;
-                    _frameVelocity.y = 0;
+                    if (rightHit || leftHit) _frameVelocity.y = 0;
+                    else if (ceilingHit)
+                    {
+                        _frameVelocity = Vector2.zero;
+                        _previousWallDirection = -_playerFacing; // Cancels out in ceiling jump so that you jump in the direction you're facing / pressing
+                    }
+                    else 
+                    {
+                        _frameVelocity = new Vector2(0, _stats.JumpPower); // If you press the cling button a little too late after hitting the ceiling, boost the player back up to the ceiling
+                        _previousWallDirection = -_playerFacing;
+                    }
                 }
                 else
                 {
@@ -304,6 +317,7 @@ namespace TarodevController
             _endedJumpEarly = false;
             _timeJumpWasPressed = 0;
             _bufferedJumpUsable = false;
+            _bufferedWallJumpUsable = false;
             _coyoteUsable = false;
             _frameVelocity.y = _stats.JumpPower;
             if (_sliding || _clinging)
