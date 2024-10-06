@@ -8,7 +8,7 @@ namespace TarodevController
         [Header("LAYERS")] [Tooltip("Set this to the layer your player is on")]
         public LayerMask PlayerLayer;
 
-        [Header("INPUT")] [Tooltip("Makes all Input snap to an integer. Prevents gamepads from walking slowly. Recommended value is true to ensure gamepad/keybaord parity.")]
+        [Header("INPUT")] [Tooltip("Makes all Input snap to an integer. Prevents gamepads from walking slowly. Recommended value is true to ensure gamepad/keyboard parity.")]
         public bool SnapInput = true;
 
         [Tooltip("Minimum input required before you mount a ladder or climb a ledge. Avoids unwanted climbing using controllers"), Range(0.01f, 0.99f)]
@@ -52,5 +52,26 @@ namespace TarodevController
 
         [Tooltip("The amount of time we buffer a jump. This allows jump input before actually hitting the ground")]
         public float JumpBuffer = .2f;
+
+        [Header("WALL JUMP")] [Tooltip("The static wall slide vertical movement speed")]
+        public float WallSlideSpeed = 5;
+
+        [Tooltip("The immediate horizontal velocity applied when wall jumping")]
+        public float WallJumpPower = 14;
+
+        [Tooltip("The amount of time it takes to leave a wall when holding away from it. This prevents falling when attempting a wall jump")]
+        public float LeaveWallBuffer = .2f;
+
+        [Tooltip("The amount of time the player cannot move back toward the wall during a wall jump")]
+        public float WallJumpTimer = .5f;
+
+        [Tooltip("The amount of time in seconds the player can cling to a wall")]
+        public float MaxClingStamina = 3f;
+
+        [Header("GRAPPLING")] [Tooltip("The grapple movement speed")]
+        public float GrappleSpeed = 14f;
+        
+        [Tooltip("The collision detection distance for disabling grappling")]
+        public float GrappleDistance = 1f;
     }
 }

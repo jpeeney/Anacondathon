@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 26
-  productGUID: 0011b38de5a6c824aa77822981bd5506
+  productGUID: de4aadf921f46684791f77c097443b22
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: Unity_2D_template
+  productName: 2D_platformer
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -629,14 +629,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Unity_2D_template
+  metroPackageName: 2D_platformer
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: Unity_2D_template
+  metroApplicationDescription: 2D_platformer
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -704,10 +704,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: dfd82a79-cd7a-450e-a1e4-407c73cc6a23
+  cloudProjectId: 79906912-4b4e-41b8-9edc-88445e7952c4
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Unity_2D_template
+  projectName: 2D_platformer
   organizationId: jpeeney
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
