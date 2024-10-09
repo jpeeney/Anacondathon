@@ -93,7 +93,7 @@ namespace TarodevController
 
             _clingButtonDown = _frameInput.Cling;
 
-            if ((_clinging || _sliding) && _frameInput.Move.x != _playerFacing)
+            if ((_wallState == WallState.WallCling || _wallState == WallState.WallSlide) && _frameInput.Move.x != _playerFacing)
             {
                 _timeDirAwayFromWallPressed = _time;
             }
@@ -109,7 +109,7 @@ namespace TarodevController
             {
                 _jumpToConsume = true;
                 _timeJumpWasPressed = _time;
-                if (_clinging || _sliding) _timeWallJumpStarted = _time;
+                if (_wallState == WallState.WallCling || _wallState == WallState.WallSlide) _timeWallJumpStarted = _time;
             }
         }
 
@@ -141,8 +141,7 @@ namespace TarodevController
         private float _frameCeilingHit = float.MinValue;
         private bool _grounded;
         private bool _clingButtonDown;
-        private bool _clinging;
-        private bool _sliding;
+        private WallState _wallState;
         private int _previousWallDirection;
         private bool _onRing;
 
@@ -181,9 +180,8 @@ namespace TarodevController
                 _bufferedJumpUsable = true;
                 _bufferedWallJumpUsable = true;
                 _endedJumpEarly = false;
-                _clinging = false;
+                _wallState = WallState.None;
                 _clingStamina = _stats.MaxClingStamina;
-                _sliding = false;
                 GroundedChanged?.Invoke(true, Mathf.Abs(_frameVelocity.y));
             }
             // Left the Ground
@@ -197,11 +195,11 @@ namespace TarodevController
             if (_grappleInUse != Grapple.None)
             {
                 // Enough room to use the grapple?
-                bool grappleCramped = ((_playerLooking == 0 && ((_playerFacing == 1 && grappleRightHit && !((_sliding || _clinging) && _previousWallDirection == 1)) || (_playerFacing == -1 && grappleLeftHit && !((_sliding || _clinging) && _previousWallDirection == -1))))
+                bool grappleCramped = ((_playerLooking == 0 && ((_playerFacing == 1 && grappleRightHit && !((_wallState != WallState.None) && _previousWallDirection == 1)) || (_playerFacing == -1 && grappleLeftHit && !((_wallState != WallState.None) && _previousWallDirection == -1))))
                 || (_playerLooking == 1 && grappleCeilingHit) || (_playerLooking == -1 && groundHit));
 
                 // Player hit a surface while grappling?
-                bool reachedGrappledSurface = ((_playerLooking == 0 && ((_playerFacing == 1 && rightHit && !((_sliding || _clinging) && _previousWallDirection == 1)) || (_playerFacing == -1 && leftHit && !((_sliding || _clinging) && _previousWallDirection == -1))))
+                bool reachedGrappledSurface = ((_playerLooking == 0 && ((_playerFacing == 1 && rightHit && !((_wallState != WallState.None) && _previousWallDirection == 1)) || (_playerFacing == -1 && leftHit && !((_wallState != WallState.None) && _previousWallDirection == -1))))
                 || (_playerLooking == 1 && ceilingHit) || (_playerLooking == -1 && groundHit));
                 
                 if ((_beingPulled && reachedGrappledSurface) || (!_beingPulled && grappleCramped) || _onRing)
@@ -209,7 +207,7 @@ namespace TarodevController
                     GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
                     if (ceilingHit && _clingButtonDown && _clingStamina > 0)
                     {
-                        _clinging = true;
+                        _wallState = WallState.CeilCling;
                         _frameVelocity.y = 0;  
                     }
                 }
@@ -237,10 +235,14 @@ namespace TarodevController
                 if (_clingButtonDown && _clingStamina > 0 && (((rightHit || leftHit) && _frameVelocity.y <= 0)
                 || ceilingHit || _time < _frameCeilingHit + _stats.CeilingClingGracePeriod))
                 {
-                    _clinging = true;
-                    if (rightHit || leftHit) _frameVelocity.y = 0;
+                    if (rightHit || leftHit)
+                    {
+                        _wallState = WallState.WallCling;
+                        _frameVelocity.y = 0;
+                    }
                     else if (ceilingHit)
                     {
+                        _wallState = WallState.CeilCling;
                         _frameVelocity = Vector2.zero;
                         _previousWallDirection = -_playerFacing; // Cancels out in ceiling jump so that you jump in the direction you're facing / pressing
                     }
@@ -252,9 +254,8 @@ namespace TarodevController
                 }
                 else
                 {
-                    _clinging = false;
-                    if ((rightHit || leftHit) && _frameVelocity.y < 0) _sliding = true;
-                    else _sliding = false;
+                    if ((rightHit || leftHit) && _frameVelocity.y < 0) _wallState = WallState.WallSlide;
+                    else _wallState = WallState.None;
 
                 }
             }
@@ -307,7 +308,7 @@ namespace TarodevController
 
             if (!_jumpToConsume && !HasBufferedJump && !HasBufferedWallJump) return;
 
-            if (_grounded || CanUseCoyote || _sliding || _clinging || _onRing) ExecuteJump(); // can jump from ring
+            if (_grounded || CanUseCoyote || _wallState != WallState.None || _onRing) ExecuteJump(); // can jump from ring
 
             _jumpToConsume = false;
         }
@@ -320,10 +321,9 @@ namespace TarodevController
             _bufferedWallJumpUsable = false;
             _coyoteUsable = false;
             _frameVelocity.y = _stats.JumpPower;
-            if (_sliding || _clinging)
+            if (_wallState != WallState.None)
             {
-                _sliding = false;
-                _clinging = false;
+                _wallState = WallState.None;
                 _frameVelocity.x = _stats.WallJumpPower * _previousWallDirection * -1;
             }
             Jumped?.Invoke();
@@ -333,12 +333,12 @@ namespace TarodevController
 
         #region Horizontal
         private float _timeDirAwayFromWallPressed;
-        private bool HasLeaveWallBuffer => _clinging || (_sliding && !_clinging && _frameInput.Move.x != _previousWallDirection && _time < _timeDirAwayFromWallPressed + _stats.LeaveWallBuffer);
+        private bool HasLeaveWallBuffer => _wallState == WallState.WallCling || (_wallState == WallState.WallSlide && _frameInput.Move.x != _previousWallDirection && _time < _timeDirAwayFromWallPressed + _stats.LeaveWallBuffer);
         private bool HoldingTowardWallJump => !_grounded && _frameInput.Move.x == _previousWallDirection && _time < _timeWallJumpStarted + _stats.WallJumpTimer;
         private void HandleDirection()
         {
             // Knockback from damage should override wall jump
-            if (!_inKnockback && _clinging)
+            if (!_inKnockback && _wallState == WallState.WallCling || _wallState == WallState.CeilCling) 
             {
                 _frameVelocity.x = 0;
             }
@@ -377,7 +377,7 @@ namespace TarodevController
 
         private void HandleGravity()
         {
-            if (_clinging)
+            if (_wallState == WallState.WallCling || _wallState == WallState.CeilCling)
             {
                 _clingStamina -= Time.fixedDeltaTime;
             }
@@ -387,7 +387,7 @@ namespace TarodevController
             }
             else
             {
-                if (_sliding) 
+                if (_wallState == WallState.WallSlide) 
                 {
                     _frameVelocity.y = -_stats.WallSlideSpeed;
                 }
@@ -418,7 +418,7 @@ namespace TarodevController
                 //Check if it's a serpentine grapple
                 //Set a bool to freeze player in the air
                 _grappleUsable = false;
-                var playerFacing = _sliding || _clinging ? -_previousWallDirection : _playerFacing; // If you're on a wall, grapple away from the wall
+                var playerFacing = _wallState == WallState.WallCling || _wallState == WallState.WallSlide ? -_previousWallDirection : _playerFacing; // If you're on a wall, grapple away from the wall
                 if (_grappleInUse == Grapple.Slither) _frameVelocity = Vector2.zero;
                 _snake.SetActive(true);
                 GrappleChanged?.Invoke(_grappleInUse, playerFacing, _playerLooking);
@@ -548,6 +548,11 @@ namespace TarodevController
     public enum Grapple
     {
         None, Quick, Slither
+    }
+
+    public enum WallState
+    {
+        None, WallCling, WallSlide, CeilCling
     }
     
     public struct FrameInput
