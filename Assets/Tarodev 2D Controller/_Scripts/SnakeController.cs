@@ -151,6 +151,11 @@ namespace TarodevController
                     if (_grappleType == Grapple.Slither) StartCoroutine(SlitherRetract());
                     else _retracting = true;
                 }
+                else if (collision.gameObject.tag == "Pullable")
+                {
+                    if (_grappleType == Grapple.Slither) StartCoroutine(SlitherRetract());
+                    else _retracting = true;
+                }
                 else
                 {
                     if (_grappleType == Grapple.Slither) _pivotPoints.Add(transform.position);

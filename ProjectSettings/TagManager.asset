@@ -8,6 +8,7 @@ TagManager:
   - Ring
   - Snake
   - Edible
+  - Pullable
   layers:
   - Default
   - TransparentFX
