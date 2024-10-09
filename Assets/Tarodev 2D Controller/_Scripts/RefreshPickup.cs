@@ -8,6 +8,7 @@ namespace TarodevController
     {
         private bool _active = true;
         private SpriteRenderer _rend;
+        [SerializeField] private GameObject _player;
 
         void Awake()
         {
@@ -19,9 +20,9 @@ namespace TarodevController
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.tag == "Player" && _active)
+            if (_active && (collision.tag == "Player" || (collision.tag == "Snake" && !collision.GetComponent<SnakeController>()._retracting)))
             {
-                collision.GetComponent<PlayerController>().RefreshGrapple();
+                _player.GetComponent<PlayerController>().RefreshGrapple();
                 _active = false;
                 _rend.color = new Color(_rend.color.r, _rend.color.g, _rend.color.b, 0.1f);
             }

@@ -426,7 +426,7 @@ namespace TarodevController
 
             if (_beingPulled)
             {
-                if (_grappleInUse == Grapple.Quick)
+                if (_grappleInUse == Grapple.Quick) // when this becomes a coroutine, you'll have to change some ifs to whiles and add yield returns
                 {
                     if (_playerLooking == 0)
                     {
@@ -527,6 +527,10 @@ namespace TarodevController
                 {
                     pivotPoints = snakePivotPoints;
                     StartCoroutine(SlitherPull());
+                }
+                else if (_grappleInUse == Grapple.Quick)
+                {
+                    // start that coroutine
                 }
             }
         }

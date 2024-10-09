@@ -1820,9 +1820,10 @@ GameObject:
   - component: {fileID: 1307174714}
   - component: {fileID: 1307174713}
   - component: {fileID: 1307174712}
+  - component: {fileID: 1307174715}
   m_Layer: 8
   m_Name: Refresh Pickup
-  m_TagString: Untagged
+  m_TagString: Edible
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1839,6 +1840,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 357db53a766ad4b4f8f82312cb6adade, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _player: {fileID: 2010697526}
 --- !u!61 &1307174713
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1893,13 +1895,40 @@ Transform:
   m_GameObject: {fileID: 1307174711}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10.49, y: 13.08, z: 0}
+  m_LocalPosition: {x: -10.49, y: 12.18, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 322352589}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!50 &1307174715
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307174711}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4
 --- !u!1 &1379180314
 GameObject:
   m_ObjectHideFlags: 0
@@ -2177,7 +2206,7 @@ GameObject:
   - component: {fileID: 1532057618}
   m_Layer: 6
   m_Name: Snake Controller
-  m_TagString: Untagged
+  m_TagString: Snake
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2215,7 +2244,7 @@ MonoBehaviour:
   _slitherSpeed: 10
   _quickMaxLength: 6
   _slitherMaxLength: 12
-  _slitherDir: 
+  _slitherDir: 0
   _pivotPoints: []
 --- !u!61 &1532057618
 BoxCollider2D:

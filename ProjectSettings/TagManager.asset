@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Death
   - Ring
+  - Snake
+  - Edible
   layers:
   - Default
   - TransparentFX

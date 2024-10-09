@@ -22,7 +22,7 @@ namespace TarodevController
         private Vector2 _playerCol;
         private Vector2 _origin;
         private Vector2 _totalOriginOffset;
-        private bool _retracting;
+        public bool _retracting {get; private set;}
         [SerializeField] private Direction _slitherDir;
         private float _totalDistanceSlithered; // running total of abs value of displacement, whether horizontal or vertical
         [SerializeField] private List<Vector2> _pivotPoints;
@@ -140,7 +140,7 @@ namespace TarodevController
 
         void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.gameObject.tag != "Player" && _snaking && !_retracting)
+            if (collision.gameObject.tag != "Player" && collision.gameObject.tag != "Edible" && _snaking && !_retracting)
             {
                 if (collision.gameObject.tag == "Death")
                 {
