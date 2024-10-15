@@ -271,7 +271,7 @@ namespace TarodevController
                 {
                     if (_grappleInUse != Grapple.None) GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
                     _onRing = true;
-                    transform.position = new Vector2(collision.transform.position.x, collision.transform.position.y - _rend.bounds.size.y);
+                    transform.position = new Vector2(collision.transform.position.x, collision.transform.position.y - _rend.bounds.size.y / 2);
                     _frameVelocity = Vector2.zero;
                 }
             }
