@@ -205,11 +205,11 @@ namespace TarodevController
                 if ((_beingPulled && reachedGrappledSurface) || (!_beingPulled && grappleCramped) || _onRing)
                 {
                     GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);
-                    if (ceilingHit && _clingButtonDown && _clingStamina > 0)
-                    {
-                        _wallState = WallState.CeilCling;
-                        _frameVelocity.y = 0;  
-                    }
+                    // if (ceilingHit && _clingButtonDown && _clingStamina > 0)
+                    // {
+                    //     _wallState = WallState.CeilCling;
+                    //     _frameVelocity.y = 0;  
+                    // }
                 }
 
             }
@@ -453,7 +453,7 @@ namespace TarodevController
                             }
                             else 
                             {
-                                transform.position = _snake.transform.position; // Snap the player to the ceiling / floor
+                                transform.position = _playerLooking == 1 ? new Vector2(_snake.transform.position.x, _snake.transform.position.y - _rend.bounds.size.y) : _snake.transform.position; // Snap the player to the ceiling / floor
                                 GrappleChanged?.Invoke(Grapple.None, _playerFacing, _playerLooking);                            
                             }
                         }
