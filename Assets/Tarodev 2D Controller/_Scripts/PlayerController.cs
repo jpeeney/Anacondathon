@@ -55,6 +55,7 @@ namespace TarodevController
 
             _clingStamina = _stats.MaxClingStamina;
             _grappleInUse = Grapple.None;
+            _grappleTypeToUse = Grapple.Quick;
 
             var _eventPublisher = _snake.GetComponent<SnakeController>();
             _eventPublisher.PullingChanged += OnPullingChanged;
@@ -73,6 +74,7 @@ namespace TarodevController
         }
 
         #region Input
+        private Grapple _grappleTypeToUse;
 
         private void GatherInput()
         {
@@ -103,7 +105,7 @@ namespace TarodevController
             if (_frameInput.Move.x != 0) _playerFacing = (int)_frameInput.Move.x; // 1 = right, -1 = left
             if (_grappleInUse == Grapple.None) _playerLooking = (int)_frameInput.Move.y; // 1 = up, 0 = neither, -1 = down
 
-            if (_frameInput.Grapple) _grappleInUse = Grapple.Slither;
+            if (_frameInput.Grapple) _grappleInUse = _grappleTypeToUse;
 
             if (_frameInput.JumpDown)
             {
@@ -111,6 +113,11 @@ namespace TarodevController
                 _timeJumpWasPressed = _time;
                 if (_wallState == WallState.WallCling || _wallState == WallState.WallSlide) _timeWallJumpStarted = _time;
             }
+
+            // DEBUG BUTTONS
+
+            if (Input.GetKeyDown("1")) _grappleTypeToUse = Grapple.Quick;
+            else if (Input.GetKeyDown("2")) _grappleTypeToUse = Grapple.Slither;
         }
 
         #endregion
