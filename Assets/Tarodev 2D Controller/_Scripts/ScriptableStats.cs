@@ -76,5 +76,8 @@ namespace TarodevController
         
         [Tooltip("The collision detection distance for disabling grappling")]
         public float GrappleDistance = 1f;
+
+        [Tooltip("The amount of time we buffer a grapple. This allows grapple input before actually hitting the ground or touching a refresh item")]
+        public float GrappleBuffer = .2f;
     }
 }

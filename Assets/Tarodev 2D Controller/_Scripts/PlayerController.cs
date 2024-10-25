@@ -30,6 +30,8 @@ namespace TarodevController
         #region Interface
 
         public Vector2 FrameInput => _frameInput.Move;
+        public WallState WallState => _wallState;
+        public int PreviousWallDirection => _previousWallDirection;
         
         // Events are like Scratch broadcast messages, but you must specify the receivers (subscribers). These receivers can also unsubscribe.
         public event Action<bool, float> GroundedChanged;
@@ -102,10 +104,14 @@ namespace TarodevController
 
             // Save which directions the player is facing and looking for other classes to use
             // E.g. which direction the grapple should go and where it should start
-            if (_frameInput.Move.x != 0) _playerFacing = (int)_frameInput.Move.x; // 1 = right, -1 = left
+            if (_frameInput.Move.x != 0 && _grappleInUse != Grapple.Slither) _playerFacing = (int)_frameInput.Move.x; // 1 = right, -1 = left
             if (_grappleInUse == Grapple.None) _playerLooking = (int)_frameInput.Move.y; // 1 = up, 0 = neither, -1 = down
 
-            if (_frameInput.Grapple) _grappleInUse = _grappleTypeToUse;
+            if (_frameInput.Grapple) 
+            {
+                _grappleToConsume = true;
+                _timeGrappleWasPressed = _time;
+            }
 
             if (_frameInput.JumpDown)
             {
@@ -183,12 +189,17 @@ namespace TarodevController
             if (!_grounded && groundHit)
             {
                 _grounded = true;
+
                 _coyoteUsable = true;
-                _bufferedJumpUsable = true;
-                _bufferedWallJumpUsable = true;
                 _endedJumpEarly = false;
+                _bufferedJumpUsable = true;
+
+                _bufferedWallJumpUsable = true;
                 _wallState = WallState.None;
                 _clingStamina = _stats.MaxClingStamina;
+
+                _bufferedGrappleUsable = true;
+                
                 GroundedChanged?.Invoke(true, Mathf.Abs(_frameVelocity.y));
             }
             // Left the Ground
@@ -302,8 +313,8 @@ namespace TarodevController
         private bool _bufferedWallJumpUsable;
         private bool _endedJumpEarly;
         private bool _coyoteUsable;
-        private float _timeJumpWasPressed;
-        private float _timeWallJumpStarted;
+        private float _timeJumpWasPressed = float.MinValue;
+        private float _timeWallJumpStarted = float.MinValue;
 
         private bool HasBufferedJump => _bufferedJumpUsable && _time < _timeJumpWasPressed + _stats.JumpBuffer;
         private bool HasBufferedWallJump => _bufferedWallJumpUsable && _time < _timeWallJumpStarted + _stats.JumpBuffer;
@@ -332,6 +343,7 @@ namespace TarodevController
             {
                 _wallState = WallState.None;
                 _frameVelocity.x = _stats.WallJumpPower * _previousWallDirection * -1;
+                _playerFacing = -_previousWallDirection;
             }
             Jumped?.Invoke();
         }
@@ -339,7 +351,7 @@ namespace TarodevController
         #endregion
 
         #region Horizontal
-        private float _timeDirAwayFromWallPressed;
+        private float _timeDirAwayFromWallPressed = float.MinValue;
         private bool HasLeaveWallBuffer => _wallState == WallState.WallCling || (_wallState == WallState.WallSlide && _frameInput.Move.x != _previousWallDirection && _time < _timeDirAwayFromWallPressed + _stats.LeaveWallBuffer);
         private bool HoldingTowardWallJump => !_grounded && _frameInput.Move.x == _previousWallDirection && _time < _timeWallJumpStarted + _stats.WallJumpTimer;
         private void HandleDirection()
@@ -412,24 +424,23 @@ namespace TarodevController
         #region Grapple
 
         [SerializeField] private bool _grappleUsable;
+        [SerializeField] private bool _grappleToConsume;
         // Consider consolidating the below variables into an enum state variable, bc you'll need one for clinging too and for serpentine grappling freeze too
         [SerializeField] private Grapple _grappleInUse;
         [SerializeField] private bool _beingPulled;
         [SerializeField] private bool _refreshToBeConsumed;
         [SerializeField] private List<Vector2> pivotPoints;
+        private float _timeGrappleWasPressed = float.MinValue;
+        private bool _bufferedGrappleUsable;
+        private bool HasBufferedGrapple => _bufferedGrappleUsable && _time < _timeGrappleWasPressed + _stats.GrappleBuffer;
 
         private void HandleGrapple()
         {
-            if (_grappleInUse != Grapple.None && _grappleUsable)
-            {
-                //Check if it's a serpentine grapple
-                //Set a bool to freeze player in the air
-                _grappleUsable = false;
-                var playerFacing = _wallState == WallState.WallCling || _wallState == WallState.WallSlide ? -_previousWallDirection : _playerFacing; // If you're on a wall, grapple away from the wall
-                if (_grappleInUse == Grapple.Slither) _frameVelocity = Vector2.zero;
-                _snake.SetActive(true);
-                GrappleChanged?.Invoke(_grappleInUse, playerFacing, _playerLooking);
-            }
+            if (!_grappleToConsume && !HasBufferedGrapple && !_beingPulled) return;
+
+            if (_grappleUsable) ExecuteGrapple();
+
+            _grappleToConsume = false;
 
             if (_beingPulled)
             {
@@ -467,6 +478,19 @@ namespace TarodevController
                     } 
                 }    
             }
+        }
+
+        private void ExecuteGrapple()
+        {
+            _timeGrappleWasPressed = 0;
+            _grappleUsable = false;
+            _grappleInUse = _grappleTypeToUse;
+
+            var playerFacing = _wallState == WallState.WallCling || _wallState == WallState.WallSlide ? -_previousWallDirection : _playerFacing; // If you're on a wall, grapple away from the wall
+            if (_grappleInUse == Grapple.Slither) _frameVelocity = Vector2.zero;
+
+            _snake.SetActive(true);
+            GrappleChanged?.Invoke(_grappleInUse, playerFacing, _playerLooking);
         }
 
         public void RefreshGrapple()
@@ -577,5 +601,7 @@ namespace TarodevController
         public event Action Jumped;
         public event Action<Grapple, int, int> GrappleChanged;
         public Vector2 FrameInput { get; }
+        public WallState WallState { get; }
+        public int PreviousWallDirection { get; }
     }
 }
